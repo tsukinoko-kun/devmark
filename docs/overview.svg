@@ -1,31 +1,64 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="370" viewBox="0 0 1100 370" role="img" aria-labelledby="title">
-<title id="title">Devmark combined scores per CPU</title>
-<rect width="1100" height="370" rx="16" fill="#0f172a"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="860" viewBox="0 0 1100 860" role="img" aria-labelledby="title">
+<title id="title">Devmark file system and CPU scores</title>
+<rect width="1100" height="860" rx="16" fill="#0f172a"/>
 <g font-family="system-ui, sans-serif" fill="#e2e8f0">
-<text x="32" y="46" font-size="26" font-weight="700">Combined CPU scores</text>
-<line x1="360.0" y1="96" x2="360.0" y2="346" stroke="#334155"/>
-<text x="360.0" y="86" text-anchor="middle" font-size="12" fill="#94a3b8">0</text>
-<line x1="525.0" y1="96" x2="525.0" y2="346" stroke="#334155"/>
-<text x="525.0" y="86" text-anchor="middle" font-size="12" fill="#94a3b8">25</text>
-<line x1="690.0" y1="96" x2="690.0" y2="346" stroke="#334155"/>
-<text x="690.0" y="86" text-anchor="middle" font-size="12" fill="#94a3b8">50</text>
-<line x1="855.0" y1="96" x2="855.0" y2="346" stroke="#334155"/>
-<text x="855.0" y="86" text-anchor="middle" font-size="12" fill="#94a3b8">75</text>
-<line x1="1020.0" y1="96" x2="1020.0" y2="346" stroke="#334155"/>
-<text x="1020.0" y="86" text-anchor="middle" font-size="12" fill="#94a3b8">100</text>
-<text x="32" y="136.0" font-size="16" font-weight="600">AMD Ryzen AI 9 HX 370 w/ Radeon</text>
-<text x="32" y="156.0" font-size="16" font-weight="600">890M</text>
-<text x="32" y="176.0" font-size="12" fill="#94a3b8">12 cores</text>
-<rect x="360" y="133.0" width="660.00" height="34" rx="5" fill="#38bdf8"/>
-<text x="1068" y="155.0" text-anchor="end" font-size="16" font-weight="600">100.0</text>
-<text x="32" y="224.0" font-size="16" font-weight="600">Apple M4 Max</text>
-<text x="32" y="244.0" font-size="12" fill="#94a3b8">14 cores</text>
-<rect x="360" y="211.0" width="548.99" height="34" rx="5" fill="#38bdf8"/>
-<text x="1068" y="233.0" text-anchor="end" font-size="16" font-weight="600">83.2</text>
-<text x="32" y="292.0" font-size="16" font-weight="600">AMD Ryzen 7 9800X3D 8-Core</text>
-<text x="32" y="312.0" font-size="16" font-weight="600">Processor</text>
-<text x="32" y="332.0" font-size="12" fill="#94a3b8">8 cores</text>
-<rect x="360" y="289.0" width="113.84" height="34" rx="5" fill="#38bdf8"/>
-<text x="1068" y="311.0" text-anchor="end" font-size="16" font-weight="600">17.2</text>
+<text x="32" y="46" font-size="26" font-weight="700">Devmark scores</text>
+<text x="32" y="74" font-size="14" fill="#94a3b8">Equal-weight geometric mean of relative speeds. Best in each section = 100. Higher is better.</text>
+<g id="file-system">
+<text x="32" y="136" font-size="22" font-weight="700">File system scores</text>
+<text x="32" y="160" font-size="14" fill="#94a3b8">Clone and install tasks grouped by kernel and version. Storage and other hardware also affect results.</text>
+<text x="32" y="182" font-size="12" fill="#94a3b8">Shared workloads: git-clone-web, git-clone-rust, git-clone-go, pnpm-install</text>
+<line x1="360.0" y1="214" x2="360.0" y2="452" stroke="#334155"/>
+<text x="360.0" y="204" text-anchor="middle" font-size="12" fill="#94a3b8">0</text>
+<line x1="525.0" y1="214" x2="525.0" y2="452" stroke="#334155"/>
+<text x="525.0" y="204" text-anchor="middle" font-size="12" fill="#94a3b8">25</text>
+<line x1="690.0" y1="214" x2="690.0" y2="452" stroke="#334155"/>
+<text x="690.0" y="204" text-anchor="middle" font-size="12" fill="#94a3b8">50</text>
+<line x1="855.0" y1="214" x2="855.0" y2="452" stroke="#334155"/>
+<text x="855.0" y="204" text-anchor="middle" font-size="12" fill="#94a3b8">75</text>
+<line x1="1020.0" y1="214" x2="1020.0" y2="452" stroke="#334155"/>
+<text x="1020.0" y="204" text-anchor="middle" font-size="12" fill="#94a3b8">100</text>
+<text x="32" y="258.0" font-size="16" font-weight="600">Linux</text>
+<text x="32" y="278.0" font-size="12" fill="#94a3b8">6.16.3-76061603-generic</text>
+<rect x="360" y="245.0" width="660.00" height="34" rx="5" fill="#34d399"/>
+<text x="1068" y="267.0" text-anchor="end" font-size="16" font-weight="600">100.0</text>
+<text x="32" y="334.0" font-size="16" font-weight="600">Darwin</text>
+<text x="32" y="354.0" font-size="12" fill="#94a3b8">27.0.0</text>
+<rect x="360" y="321.0" width="327.35" height="34" rx="5" fill="#34d399"/>
+<text x="1068" y="343.0" text-anchor="end" font-size="16" font-weight="600">49.6</text>
+<text x="32" y="410.0" font-size="16" font-weight="600">Windows NT</text>
+<text x="32" y="430.0" font-size="12" fill="#94a3b8">10.0.26300</text>
+<rect x="360" y="397.0" width="33.37" height="34" rx="5" fill="#34d399"/>
+<text x="1068" y="419.0" text-anchor="end" font-size="16" font-weight="600">5.1</text>
+</g>
+<g id="cpu">
+<text x="32" y="512" font-size="22" font-weight="700">CPU scores</text>
+<text x="32" y="536" font-size="14" fill="#94a3b8">Build tasks grouped by CPU and core count.</text>
+<text x="32" y="558" font-size="12" fill="#94a3b8">Shared workloads: vite-build, cargo-build, go-build</text>
+<line x1="360.0" y1="590" x2="360.0" y2="836" stroke="#334155"/>
+<text x="360.0" y="580" text-anchor="middle" font-size="12" fill="#94a3b8">0</text>
+<line x1="525.0" y1="590" x2="525.0" y2="836" stroke="#334155"/>
+<text x="525.0" y="580" text-anchor="middle" font-size="12" fill="#94a3b8">25</text>
+<line x1="690.0" y1="590" x2="690.0" y2="836" stroke="#334155"/>
+<text x="690.0" y="580" text-anchor="middle" font-size="12" fill="#94a3b8">50</text>
+<line x1="855.0" y1="590" x2="855.0" y2="836" stroke="#334155"/>
+<text x="855.0" y="580" text-anchor="middle" font-size="12" fill="#94a3b8">75</text>
+<line x1="1020.0" y1="590" x2="1020.0" y2="836" stroke="#334155"/>
+<text x="1020.0" y="580" text-anchor="middle" font-size="12" fill="#94a3b8">100</text>
+<text x="32" y="634.0" font-size="16" font-weight="600">Apple M4 Max</text>
+<text x="32" y="654.0" font-size="12" fill="#94a3b8">14 cores</text>
+<rect x="360" y="621.0" width="660.00" height="34" rx="5" fill="#38bdf8"/>
+<text x="1068" y="643.0" text-anchor="end" font-size="16" font-weight="600">100.0</text>
+<text x="32" y="702.0" font-size="16" font-weight="600">AMD Ryzen AI 9 HX 370 w/ Radeon</text>
+<text x="32" y="722.0" font-size="16" font-weight="600">890M</text>
+<text x="32" y="742.0" font-size="12" fill="#94a3b8">12 cores</text>
+<rect x="360" y="699.0" width="398.21" height="34" rx="5" fill="#38bdf8"/>
+<text x="1068" y="721.0" text-anchor="end" font-size="16" font-weight="600">60.3</text>
+<text x="32" y="782.0" font-size="16" font-weight="600">AMD Ryzen 7 9800X3D 8-Core</text>
+<text x="32" y="802.0" font-size="16" font-weight="600">Processor</text>
+<text x="32" y="822.0" font-size="12" fill="#94a3b8">8 cores</text>
+<rect x="360" y="779.0" width="352.74" height="34" rx="5" fill="#38bdf8"/>
+<text x="1068" y="801.0" text-anchor="end" font-size="16" font-weight="600">53.4</text>
+</g>
 </g>
 </svg>

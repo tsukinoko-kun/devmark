@@ -10,4 +10,12 @@ The benchmark measures:
 - Cargo build of Bevy's breakout example
 - Go build of Podman's remote client
 
-![Combined benchmark scores per CPU](docs/overview.svg)
+![File system and CPU benchmark scores](docs/overview.svg)
+
+File system scores combine the three Git clone tasks and pnpm install, grouped by kernel name and version.
+These scores reflect the tested systems, including their storage hardware.
+CPU scores combine the Vite, Cargo, and Go builds, grouped by CPU name and core count.
+Each section weights its shared workloads equally using a geometric mean of relative speeds, with its fastest group scoring 100.
+Repeated measurements use the median time for each workload within a group.
+
+Regenerate the chart from saved measurements with `python -m devmark.overview`.

@@ -52,7 +52,8 @@ class RunTests(unittest.TestCase):
                     relative_error=0.05, timeout=5, keep_workspace=False, list=False,
                 )
                 measurement = {
-                    "hardware": {"cpu": {"name": "Test CPU", "cores": 8}},
+                    "hardware": {"cpu": {"name": "Test CPU", "cores": 8},
+                                 "kernel": {"name": "Linux", "version": "6.16"}},
                     "results": {"git-clone-web": {"median_ms": 100}},
                 }
                 output = io.StringIO()
