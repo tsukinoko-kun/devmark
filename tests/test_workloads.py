@@ -4,7 +4,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from devmark.process import Runner
 from devmark.workloads import Skipped, Suite, remove_owned
@@ -58,6 +58,46 @@ class CleanupTests(unittest.TestCase):
             with patch("devmark.workloads.shutil.which", return_value=None):
                 with self.assertRaisesRegex(Skipped, "Missing cargo"):
                     suite.require("cargo")
+
+
+class ToolchainTests(unittest.TestCase):
+    def test_rust_delegates_prerequisites_to_cargo(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "run" / "rust"
+            source.mkdir(parents=True)
+            (source / "Cargo.lock").write_text("fixture")
+            runner = Mock()
+            suite = Suite(root / "cache", root / "run", runner, lambda text: None)
+            with patch.object(suite, "require", return_value="cargo") as require, \
+                    patch.object(suite, "source", return_value=source), \
+                    patch("devmark.workloads.probe", side_effect=AssertionError("Unexpected toolchain precheck")):
+                workload = suite.rust()
+            require.assert_called_once_with("cargo")
+            self.assertEqual(workload.command[:2], ["cargo", "build"])
+            self.assertEqual(runner.run.call_args.args[0], ["cargo", "fetch", "--locked"])
+            self.assertEqual(workload.env["CARGO_NET_OFFLINE"], "true")
+
+    def test_go_resolves_newer_toolchain_before_offline_build(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "source"
+            source.mkdir()
+            (source / "go.mod").write_text("module fixture\ngo 1.26.3\n")
+            runner = Mock()
+            suite = Suite(root / "cache", root / "run", runner, lambda text: None)
+            suite.versions["go"] = "go version go1.26.2 windows/amd64"
+            with patch.object(suite, "require", return_value="installed-go"), \
+                    patch.object(suite, "source", return_value=source), \
+                    patch("devmark.workloads.probe", return_value="windows\namd64"):
+                workload = suite.go()
+            runner.run.assert_called_once()
+            download = runner.run.call_args
+            self.assertEqual(download.args[0], ["installed-go", "mod", "download"])
+            self.assertEqual(download.args[2]["GOTOOLCHAIN"], "auto")
+            self.assertEqual(workload.command[0], "installed-go")
+            self.assertEqual(workload.env["GOTOOLCHAIN"], "auto")
+            self.assertEqual(workload.env["GOPROXY"], "off")
 
 
 @unittest.skipUnless(shutil.which("git"), "Git not installed")

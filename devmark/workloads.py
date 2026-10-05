@@ -6,8 +6,6 @@ import platform
 import shutil
 import stat
 import sys
-import tomllib
-import re
 from typing import Callable
 
 from .process import Runner, probe
@@ -24,7 +22,7 @@ TESTS = {
     "cargo-build": ("Cargo build · Bevy breakout", "rust"),
     "go-build": ("Go build · Podman remote", "go"),
 }
-NO_DOWNLOAD = {"COREPACK_ENABLE_NETWORK": "0", "COREPACK_ENABLE_PROJECT_SPEC": "0", "GOTOOLCHAIN": "local"}
+NO_DOWNLOAD = {"COREPACK_ENABLE_NETWORK": "0", "COREPACK_ENABLE_PROJECT_SPEC": "0"}
 
 
 class Skipped(RuntimeError):
@@ -78,7 +76,7 @@ class Suite:
             raise Skipped(f"Missing {name} on PATH.")
         version = probe([executable, *(args or ["--version"])], cwd=ROOT, env=NO_DOWNLOAD)
         if not version:
-            raise Skipped(f"{name} is installed but cannot run with automatic toolchain downloads disabled.")
+            raise Skipped(f"{name} is installed but its version command failed.")
         self.versions[name] = version
         return executable
 
@@ -114,11 +112,6 @@ class Suite:
 
     def web(self) -> tuple[str, Path, Path]:
         self.require("node")
-        node = re.search(r"v(\d+)\.(\d+)\.(\d+)", self.versions["node"])
-        if node:
-            version = tuple(map(int, node.groups()))
-            if not (version[0] == 20 and version >= (20, 19, 0)) and version < (22, 12, 0):
-                raise Skipped(f"Vite 7 requires Node 20.19.x or Node 22.12 or newer; installed: {self.versions['node']}.")
         pnpm = self.require("pnpm")
         source = self.source("web")
         workspace = source / "pnpm-workspace.yaml"
@@ -181,40 +174,12 @@ class Suite:
 
     def rust(self) -> Workload:
         cargo = self.require("cargo")
-        self.require("rustc")
-        system = platform.system()
-        if system == "Windows":
-            for tool in ("cl", "link", "rc"):
-                if shutil.which(tool) is None:
-                    raise Skipped(f"Missing {tool}. Use a Visual Studio developer shell with the Windows SDK.")
-        else:
-            self.require("cc")
-            if system == "Darwin" and not probe(["xcrun", "--show-sdk-path"]):
-                raise Skipped("Missing macOS SDK. Install Xcode Command Line Tools.")
-            if system == "Linux":
-                self.require("pkg-config")
-                missing = [library for library in ("alsa", "libudev", "wayland-client", "xkbcommon") if probe(["pkg-config", "--exists", library]) is None]
-                if missing:
-                    raise Skipped(f"Missing Bevy native development libraries: {', '.join(missing)}.")
         source = self.source("rust")
         env = NO_DOWNLOAD | {
             "CARGO_TARGET_DIR": str(self.run_dir / "cargo-target"),
             "CARGO_INCREMENTAL": "0", "RUSTC_WRAPPER": "", "RUSTC_WORKSPACE_WRAPPER": "",
             "CCACHE_DISABLE": "1", "SCCACHE_DISABLE": "1",
         }
-        if shutil.which("rustup"):
-            active = probe(["rustup", "show", "active-toolchain"], cwd=ROOT)
-            if not active:
-                raise Skipped("No installed active Rust toolchain.")
-            env["RUSTUP_TOOLCHAIN"] = active.split()[0]
-        version = probe(["rustc", "--version"], cwd=source, env=env)
-        if not version:
-            raise Skipped("The installed Rust compiler cannot run in the Bevy checkout.")
-        self.versions["rustc"] = version
-        required = tomllib.loads((source / "Cargo.toml").read_text())["package"]["rust-version"]
-        match = re.search(r"rustc (\d+)\.(\d+)\.(\d+)", version)
-        if match and tuple(map(int, match.groups())) < tuple(map(int, required.split("."))):
-            raise Skipped(f"Bevy requires Rust {required} or newer; installed: {version}.")
         # Bevy does not ship a Cargo.lock. Keep the first resolution across runs.
         self.update("Resolve and download Bevy dependencies · not timed")
         lock = source / "Cargo.lock"
@@ -245,15 +210,8 @@ class Suite:
         binary = self.run_dir / ("podman-remote.exe" if goos == "windows" else "podman-remote")
         env = NO_DOWNLOAD | {
             "GOOS": goos, "GOARCH": goarch, "CGO_ENABLED": "0", "GOFLAGS": "",
-            "GOENV": "off", "GOWORK": "off", "GOCACHE": str(target),
+            "GOENV": "off", "GOWORK": "off", "GOCACHE": str(target), "GOTOOLCHAIN": "auto",
         }
-        required = re.search(r"^go (\d+)\.(\d+)(?:\.(\d+))?", (source / "go.mod").read_text(), re.M)
-        installed = re.search(r"go(\d+)\.(\d+)(?:\.(\d+))?", self.versions["go"])
-        if required and installed:
-            need = tuple(int(part or 0) for part in required.groups())
-            have = tuple(int(part or 0) for part in installed.groups())
-            if have < need:
-                raise Skipped(f"Podman requires Go {'.'.join(map(str, need))} or newer; installed: {self.versions['go']}.")
         self.update("Download Podman dependencies · not timed")
         # Modules are fetched even though upstream currently also ships vendor/.
         self.runner.run([go, "mod", "download"], source, env)
@@ -263,7 +221,7 @@ class Suite:
         return Workload([
             go, "build", "-mod=readonly", "-trimpath", "-tags",
             "remote exclude_graphdriver_btrfs containers_image_openpgp", "-o", str(binary), "./cmd/podman",
-        ], source, env | {"GOPROXY": "off", "GOSUMDB": "off"}, reset, {
+        ], source, env | {"GOPROXY": "off"}, reset, {
             "target": "Podman remote client", "goos": goos, "goarch": goarch,
             "cgo": "disabled", "dependency_cache": "warm Go module cache",
             "output_cache": "isolated GOCACHE and binary removed before each run, including cached stdlib",
