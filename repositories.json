@@ -1,0 +1,15 @@
+{
+  "web": {
+    "url": "https://github.com/Kiranism/tanstack-start-dashboard.git",
+    "commit": "f3375fcce5d2b2fbc35caef776e5a1c61b030439"
+  },
+  "rust": {
+    "url": "https://github.com/bevyengine/bevy.git",
+    "commit": "f667c282dad2c1419afb5836ded22a3ec263970e",
+    "release": "v0.18.1"
+  },
+  "go": {
+    "url": "https://github.com/podman-container-tools/podman.git",
+    "commit": "029d759171826653a6e964febf32000a40426442"
+  }
+}
