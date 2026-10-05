@@ -1,0 +1,71 @@
+{
+  "hardware": {
+    "computer_model": "MacBook Pro",
+    "cpu": {
+      "name": "Apple M4 Max",
+      "cores": 14,
+      "clock_mhz": null
+    },
+    "gpus": [
+      {
+        "name": "Apple M4 Max",
+        "vram_bytes": null
+      }
+    ],
+    "ram": {
+      "name": null,
+      "size_bytes": 38654705664,
+      "speed": null,
+      "standard": null
+    },
+    "os_name": "macOS 27.0.1",
+    "kernel": {
+      "name": "Darwin",
+      "version": "27.0.0"
+    }
+  },
+  "results": {
+    "git-clone-web": {
+      "min_ms": 75.098583,
+      "max_ms": 77.380208,
+      "median_ms": 75.98225,
+      "average_ms": 76.180575
+    },
+    "git-clone-rust": {
+      "min_ms": 613.418708,
+      "max_ms": 638.926792,
+      "median_ms": 623.804542,
+      "average_ms": 625.6815918
+    },
+    "git-clone-go": {
+      "min_ms": 1131.571375,
+      "max_ms": 1163.824542,
+      "median_ms": 1153.813167,
+      "average_ms": 1150.522275
+    },
+    "pnpm-install": {
+      "min_ms": 1038.842083,
+      "max_ms": 1435.426708,
+      "median_ms": 1256.2044375,
+      "average_ms": 1247.2278542
+    },
+    "vite-build": {
+      "min_ms": 12076.694958,
+      "max_ms": 13254.546375,
+      "median_ms": 12107.754333,
+      "average_ms": 12305.514041666667
+    },
+    "cargo-build": {
+      "min_ms": 48799.200917,
+      "max_ms": 50157.598334,
+      "median_ms": 49445.45225,
+      "average_ms": 49428.2202168
+    },
+    "go-build": {
+      "min_ms": 7658.930041,
+      "max_ms": 7777.250958,
+      "median_ms": 7685.486833,
+      "average_ms": 7697.0169498
+    }
+  }
+}
