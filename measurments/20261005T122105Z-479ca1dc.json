@@ -1,0 +1,71 @@
+{
+  "hardware": {
+    "computer_model": "TUXEDO TUXEDO InfinityBook Pro AMD Gen10",
+    "cpu": {
+      "name": "AMD Ryzen AI 9 HX 370 w/ Radeon 890M",
+      "cores": 12,
+      "clock_mhz": 3912.281000000002
+    },
+    "gpus": [
+      {
+        "name": "Advanced Micro Devices, Inc. [AMD/ATI] Strix [Radeon 880M / 890M]",
+        "vram_bytes": 536870912
+      }
+    ],
+    "ram": {
+      "name": null,
+      "size_bytes": 66484858880,
+      "speed": null,
+      "standard": null
+    },
+    "os_name": "Pop!_OS 24.04 LTS",
+    "kernel": {
+      "name": "Linux",
+      "version": "6.16.3-76061603-generic"
+    }
+  },
+  "results": {
+    "git-clone-web": {
+      "min_ms": 56.392816,
+      "max_ms": 70.666286,
+      "median_ms": 59.445694,
+      "average_ms": 60.5084535
+    },
+    "git-clone-rust": {
+      "min_ms": 428.944798,
+      "max_ms": 450.569061,
+      "median_ms": 431.61812,
+      "average_ms": 436.7797346
+    },
+    "git-clone-go": {
+      "min_ms": 465.704607,
+      "max_ms": 480.442252,
+      "median_ms": 476.083361,
+      "average_ms": 473.2460822
+    },
+    "pnpm-install": {
+      "min_ms": 303.03343,
+      "max_ms": 359.094641,
+      "median_ms": 340.3327665,
+      "average_ms": 338.066930625
+    },
+    "vite-build": {
+      "min_ms": 17064.926969,
+      "max_ms": 17434.714186,
+      "median_ms": 17297.076493,
+      "average_ms": 17261.3919954
+    },
+    "cargo-build": {
+      "min_ms": 118179.006403,
+      "max_ms": 121814.88494,
+      "median_ms": 120019.368155,
+      "average_ms": 119725.6658184
+    },
+    "go-build": {
+      "min_ms": 9955.678333,
+      "max_ms": 10154.784503,
+      "median_ms": 10091.061549,
+      "average_ms": 10076.3441904
+    }
+  }
+}
