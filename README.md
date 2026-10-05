@@ -9,3 +9,5 @@ The benchmark measures:
 - Vite build of the TanStack Start dashboard
 - Cargo build of Bevy's breakout example
 - Go build of Podman's remote client
+
+![Combined benchmark scores per CPU](docs/overview.svg)

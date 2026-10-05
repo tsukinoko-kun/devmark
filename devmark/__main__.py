@@ -16,6 +16,7 @@ from rich.table import Table
 from rich.text import Text
 
 from .hardware import collect
+from .overview import generate
 from .process import Runner
 from .stats import Sampling, summarize
 from .workloads import ROOT, TESTS, Skipped, Suite, remove_owned
@@ -226,6 +227,14 @@ def main() -> int:
             console.print(Text(f"Cannot save measurement: {error}", style="red"))
             exit_code = 1
     summary(console, records, path if exit_code == 0 else None, run_dir)
+    if exit_code == 0:
+        overview = ROOT / "docs" / "overview.svg"
+        try:
+            generate(output_dir, overview)
+            console.print(Text(f"SVG: {overview}"))
+        except (OSError, ValueError) as error:
+            console.print(Text(f"Measurement saved, but cannot generate overview: {error}", style="red"))
+            exit_code = 1
     return exit_code
 
 

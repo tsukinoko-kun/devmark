@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="210" viewBox="0 0 1100 210" role="img" aria-labelledby="title">
+<title id="title">Devmark combined scores per CPU</title>
+<rect width="1100" height="210" rx="16" fill="#0f172a"/>
+<g font-family="system-ui, sans-serif" fill="#e2e8f0">
+<text x="32" y="46" font-size="26" font-weight="700">Combined CPU scores</text>
+<line x1="360.0" y1="96" x2="360.0" y2="186" stroke="#334155"/>
+<text x="360.0" y="86" text-anchor="middle" font-size="12" fill="#94a3b8">0</text>
+<line x1="525.0" y1="96" x2="525.0" y2="186" stroke="#334155"/>
+<text x="525.0" y="86" text-anchor="middle" font-size="12" fill="#94a3b8">25</text>
+<line x1="690.0" y1="96" x2="690.0" y2="186" stroke="#334155"/>
+<text x="690.0" y="86" text-anchor="middle" font-size="12" fill="#94a3b8">50</text>
+<line x1="855.0" y1="96" x2="855.0" y2="186" stroke="#334155"/>
+<text x="855.0" y="86" text-anchor="middle" font-size="12" fill="#94a3b8">75</text>
+<line x1="1020.0" y1="96" x2="1020.0" y2="186" stroke="#334155"/>
+<text x="1020.0" y="86" text-anchor="middle" font-size="12" fill="#94a3b8">100</text>
+<text x="32" y="144.0" font-size="16" font-weight="600">Apple M4 Max</text>
+<text x="32" y="164.0" font-size="12" fill="#94a3b8">14 cores</text>
+<rect x="360" y="131.0" width="660.00" height="34" rx="5" fill="#38bdf8"/>
+<text x="1068" y="153.0" text-anchor="end" font-size="16" font-weight="600">100.0</text>
+</g>
+</svg>
