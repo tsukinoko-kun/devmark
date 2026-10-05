@@ -28,8 +28,8 @@
 <text x="1068" y="343.0" text-anchor="end" font-size="16" font-weight="600">49.6</text>
 <text x="32" y="410.0" font-size="16" font-weight="600">Windows NT</text>
 <text x="32" y="430.0" font-size="12" fill="#94a3b8">10.0.26300</text>
-<rect x="360" y="397.0" width="33.37" height="34" rx="5" fill="#34d399"/>
-<text x="1068" y="419.0" text-anchor="end" font-size="16" font-weight="600">5.1</text>
+<rect x="360" y="397.0" width="35.04" height="34" rx="5" fill="#34d399"/>
+<text x="1068" y="419.0" text-anchor="end" font-size="16" font-weight="600">5.3</text>
 </g>
 <g id="cpu">
 <text x="32" y="512" font-size="22" font-weight="700">CPU scores</text>
@@ -57,8 +57,8 @@
 <text x="32" y="782.0" font-size="16" font-weight="600">AMD Ryzen 7 9800X3D 8-Core</text>
 <text x="32" y="802.0" font-size="16" font-weight="600">Processor</text>
 <text x="32" y="822.0" font-size="12" fill="#94a3b8">8 cores</text>
-<rect x="360" y="779.0" width="352.74" height="34" rx="5" fill="#38bdf8"/>
-<text x="1068" y="801.0" text-anchor="end" font-size="16" font-weight="600">53.4</text>
+<rect x="360" y="779.0" width="368.13" height="34" rx="5" fill="#38bdf8"/>
+<text x="1068" y="801.0" text-anchor="end" font-size="16" font-weight="600">55.8</text>
 </g>
 </g>
 </svg>

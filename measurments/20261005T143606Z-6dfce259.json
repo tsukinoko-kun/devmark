@@ -1,0 +1,75 @@
+{
+  "hardware": {
+    "computer_model": "Gigabyte Technology Co., Ltd. B650 EAGLE AX",
+    "cpu": {
+      "name": "AMD Ryzen 7 9800X3D 8-Core Processor",
+      "cores": 8,
+      "clock_mhz": 4700
+    },
+    "gpus": [
+      {
+        "name": "AMD Radeon(TM) Graphics",
+        "vram_bytes": 2147483648
+      },
+      {
+        "name": "NVIDIA GeForce RTX 5080",
+        "vram_bytes": 17094934528
+      }
+    ],
+    "ram": {
+      "name": "CP32G56C46U5.C16D",
+      "size_bytes": 66157793280,
+      "speed": "5600 MT/s",
+      "standard": "DDR5"
+    },
+    "os_name": "Microsoft Windows 11 Pro",
+    "kernel": {
+      "name": "Windows NT",
+      "version": "10.0.26300"
+    }
+  },
+  "results": {
+    "git-clone-web": {
+      "min_ms": 913.3657,
+      "max_ms": 1409.0368,
+      "median_ms": 938.3615500000001,
+      "average_ms": 1004.4420700000001
+    },
+    "git-clone-rust": {
+      "min_ms": 14370.7133,
+      "max_ms": 14435.7431,
+      "median_ms": 14406.3341,
+      "average_ms": 14404.395199999999
+    },
+    "git-clone-go": {
+      "min_ms": 6438.6122,
+      "max_ms": 6844.2181,
+      "median_ms": 6642.3271,
+      "average_ms": 6645.42022
+    },
+    "pnpm-install": {
+      "min_ms": 4492.3702,
+      "max_ms": 4690.9119,
+      "median_ms": 4619.1657,
+      "average_ms": 4609.4363
+    },
+    "vite-build": {
+      "min_ms": 25638.1579,
+      "max_ms": 25878.4171,
+      "median_ms": 25858.0327,
+      "average_ms": 25785.56554
+    },
+    "cargo-build": {
+      "min_ms": 76068.9375,
+      "max_ms": 76375.2766,
+      "median_ms": 76209.459,
+      "average_ms": 76236.31266
+    },
+    "go-build": {
+      "min_ms": 11620.579,
+      "max_ms": 11796.2233,
+      "median_ms": 11767.9301,
+      "average_ms": 11743.89956
+    }
+  }
+}
