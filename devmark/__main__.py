@@ -87,7 +87,7 @@ class Display:
         elapsed = time.monotonic() - self.started
         return Panel(Group(
             table, Spinner("dots", text=Text(self.phase)),
-            Text(f"Elapsed {elapsed / 60:.1f} min · downloads and cleanup are not timed", style="dim"),
+            Text(f"Elapsed {elapsed / 60:.1f} min", style="dim"),
         ), title="devmark", border_style="blue")
 
 
