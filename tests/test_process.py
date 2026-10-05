@@ -1,10 +1,13 @@
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import time
 import unittest
 
-from devmark.process import CommandError, Runner
+import psutil
+
+from devmark.process import CommandError, Runner, probe
 
 
 class ProcessTests(unittest.TestCase):
@@ -30,6 +33,70 @@ class ProcessTests(unittest.TestCase):
             with self.assertRaisesRegex(CommandError, "Timed out"):
                 Runner(root / "logs", timeout=0.1).run([sys.executable, "-c", "import time; time.sleep(60)"], root)
             self.assertLess(time.monotonic() - start, 5)
+
+    def test_probe_captures_output_and_handles_failure(self):
+        self.assertEqual(probe([sys.executable, "-c", "print('version')"]), "version")
+        self.assertIsNone(probe([sys.executable, "-c", "raise SystemExit(7)"]))
+
+    def test_interrupt_stops_command_and_descendants(self):
+        for mode in ("run", "probe"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                grandchild = "import os, pathlib, time; pathlib.Path('grandchild.pid').write_text(str(os.getpid())); time.sleep(60)"
+                child = (
+                    "import os, pathlib, subprocess, sys, time; "
+                    "pathlib.Path('child.pid').write_text(str(os.getpid())); "
+                    f"subprocess.Popen([sys.executable, '-c', {grandchild!r}]); time.sleep(60)"
+                )
+                controller = f"""
+import signal, sys, threading, time
+from pathlib import Path
+from devmark.process import Runner, probe
+root = Path({str(root)!r})
+def interrupt():
+    deadline = time.monotonic() + 5
+    while not (root / 'grandchild.pid').exists() and time.monotonic() < deadline:
+        time.sleep(0.02)
+    signal.raise_signal(signal.SIGINT)
+thread = threading.Thread(target=interrupt, daemon=True)
+thread.start()
+try:
+    command = [sys.executable, '-c', {child!r}]
+    if {mode!r} == 'run':
+        Runner(root / 'logs').run(command, root)
+    else:
+        probe(command, cwd=root)
+except KeyboardInterrupt:
+    print('cancelled', flush=True)
+    thread.join()
+    sys.exit(130)
+sys.exit('Interrupt was not handled')
+"""
+                processes = []
+                try:
+                    start = time.monotonic()
+                    result = subprocess.run(
+                        [sys.executable, "-c", controller], capture_output=True, text=True, timeout=10,
+                    )
+                    self.assertEqual(result.returncode, 130, result.stderr)
+                    self.assertIn("cancelled", result.stdout)
+                    self.assertLess(time.monotonic() - start, 5)
+                    for name in ("child.pid", "grandchild.pid"):
+                        pid = int((root / name).read_text())
+                        try:
+                            process = psutil.Process(pid)
+                        except psutil.NoSuchProcess:
+                            continue
+                        processes.append(process)
+                    _, alive = psutil.wait_procs(processes, timeout=2)
+                    self.assertFalse([p for p in alive if p.status() != psutil.STATUS_ZOMBIE])
+                finally:
+                    for name in ("child.pid", "grandchild.pid"):
+                        if (root / name).exists():
+                            try:
+                                psutil.Process(int((root / name).read_text())).kill()
+                            except psutil.NoSuchProcess:
+                                pass
 
 
 if __name__ == "__main__":

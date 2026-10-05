@@ -60,7 +60,17 @@ class Runner:
             watcher = threading.Thread(target=watchdog, daemon=True)
             watcher.start()
             try:
-                returncode = process.wait()
+                # An infinite Windows wait delays Python's Ctrl+C handler until
+                # the child exits. Bounded waits let pending signals run.
+                if os.name == "nt":
+                    while True:
+                        try:
+                            returncode = process.wait(timeout=0.1)
+                            break
+                        except subprocess.TimeoutExpired:
+                            pass
+                else:
+                    returncode = process.wait()
                 elapsed = (time.perf_counter_ns() - start) / 1_000_000
             except BaseException:
                 kill_tree(process)
@@ -80,13 +90,29 @@ class Runner:
 
 def probe(command: list[str], cwd: Path | None = None, env: dict[str, str] | None = None) -> str | None:
     try:
-        result = subprocess.run(
-            command, cwd=cwd, env=os.environ | (env or {}), capture_output=True,
-            text=True, encoding="utf-8", errors="replace", timeout=30, check=False,
+        process = subprocess.Popen(
+            command, cwd=cwd, env=os.environ | (env or {}), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            text=True, encoding="utf-8", errors="replace",
             stdin=subprocess.DEVNULL,
+            start_new_session=os.name != "nt",
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0,
         )
-        if result.returncode == 0:
-            return result.stdout.strip()
-    except (OSError, subprocess.TimeoutExpired):
-        pass
-    return None
+    except OSError:
+        return None
+    deadline = time.monotonic() + 30
+    try:
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                kill_tree(process)
+                process.communicate()
+                return None
+            try:
+                stdout, _ = process.communicate(timeout=min(0.1, remaining))
+                return stdout.strip() if process.returncode == 0 else None
+            except subprocess.TimeoutExpired:
+                pass
+    except BaseException:
+        kill_tree(process)
+        process.communicate()
+        raise

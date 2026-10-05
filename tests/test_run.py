@@ -13,6 +13,36 @@ from devmark.workloads import Workload
 
 
 class RunTests(unittest.TestCase):
+    def test_interrupt_cancels_run_and_cleans_workspace(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            args = argparse.Namespace(
+                only=["cargo-build", "go-build"], min_runs=3, max_runs=3,
+                relative_error=0.05, timeout=5, keep_workspace=False, list=False,
+            )
+            output = io.StringIO()
+            def prepare(test):
+                workspace = next((root / ".devmark" / "runs").iterdir()) / "sources"
+                workspace.mkdir()
+                return Workload([], workspace, {}, lambda: None)
+            with (
+                patch.object(cli, "ROOT", root),
+                patch.object(cli, "arguments", return_value=args),
+                patch.object(cli, "collect", return_value={}),
+                patch.object(cli, "Console", return_value=Console(file=output)),
+                patch.object(cli.Suite, "prepare", side_effect=prepare) as prepared,
+                patch.object(cli.Runner, "run", side_effect=KeyboardInterrupt),
+                patch.object(cli, "generate") as generate,
+            ):
+                self.assertEqual(cli.main(), 130)
+            prepared.assert_called_once_with("cargo-build")
+            generate.assert_not_called()
+            self.assertEqual(list((root / "measurments").glob("*.json*")), [])
+            run_dir = next((root / ".devmark" / "runs").iterdir())
+            self.assertFalse((run_dir / "sources").exists())
+            self.assertTrue((run_dir / "logs").exists())
+            self.assertIn("interrupted", output.getvalue())
+
     def test_success_saves_measurement_then_generates_overview(self):
         for graph_error in (None, ValueError("Invalid saved measurement")):
             with self.subTest(graph_error=graph_error), tempfile.TemporaryDirectory() as directory:
