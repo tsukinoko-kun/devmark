@@ -10,7 +10,7 @@ The benchmark measures:
 - Cargo build of Bevy's breakout example
 - Go build of Podman's remote client
 
-![File system and CPU benchmark scores](docs/overview.svg)
+![File system and CPU benchmark scores](https://tsukinoko-kun.github.io/devmark/overview.svg)
 
 File system scores combine the three Git clone tasks and pnpm install, grouped by kernel name and version.
 These scores reflect the tested systems, including their storage hardware.
