@@ -30,6 +30,7 @@ class RunTests(unittest.TestCase):
                 patch.object(cli, "arguments", return_value=args),
                 patch.object(cli, "collect", return_value={}),
                 patch.object(cli, "Console", return_value=Console(file=output)),
+                patch.object(cli.Suite, "install"),
                 patch.object(cli.Suite, "prepare", side_effect=prepare) as prepared,
                 patch.object(cli.Runner, "run", side_effect=KeyboardInterrupt),
                 patch.object(cli, "generate") as generate,
@@ -64,6 +65,7 @@ class RunTests(unittest.TestCase):
                     patch.object(cli, "collect", return_value={}),
                     patch.object(cli, "measurement", return_value=measurement),
                     patch.object(cli, "Console", return_value=Console(file=output)),
+                    patch.object(cli.Suite, "install"),
                     patch.object(cli.Suite, "prepare", return_value=workload),
                     patch.object(cli.Runner, "run", return_value=100),
                     patch.object(cli, "generate", wraps=cli.generate, side_effect=graph_error) as generate,
@@ -97,6 +99,7 @@ class RunTests(unittest.TestCase):
                 patch.object(cli, "arguments", return_value=args),
                 patch.object(cli, "collect", return_value={}),
                 patch.object(cli, "Console", return_value=Console(file=output)),
+                patch.object(cli.Suite, "install"),
                 patch.object(cli.Suite, "prepare", side_effect=prepare),
                 patch.object(cli, "generate") as generate,
             ):

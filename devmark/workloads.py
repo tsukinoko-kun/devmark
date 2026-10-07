@@ -9,6 +9,7 @@ import sys
 from typing import Callable
 
 from .process import Runner, probe
+from .toolchains import Toolchains, ToolchainError
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -69,14 +70,23 @@ class Suite:
         self.sources: dict[str, Path] = {}
         self.web_ready = False
         self.versions: dict[str, str] = {"python": platform.python_version()}
+        self.tools = Toolchains(cache, run_dir, runner, update)
+        self.env = NO_DOWNLOAD.copy()
+
+    def install(self, tests: set[str]) -> None:
+        self.tools.install(tests)
+        self.env |= self.tools.env
+
+    def run(self, command: list[str], cwd: Path, env: dict[str, str] | None = None) -> float:
+        return self.runner.run(command, cwd, self.env | (env or {}))
 
     def require(self, name: str, args: list[str] | None = None) -> str:
-        executable = shutil.which(name)
-        if executable is None:
-            raise Skipped(f"Missing {name} on PATH.")
-        version = probe([executable, *(args or ["--version"])], cwd=ROOT, env=NO_DOWNLOAD)
+        executable = self.tools.executable(name)
+        if name in self.versions:
+            return executable
+        version = probe([executable, *(args or ["--version"])], cwd=ROOT, env=self.env)
         if not version:
-            raise Skipped(f"{name} is installed but its version command failed.")
+            raise ToolchainError(f"Portable {name} version command failed: {executable}.")
         self.versions[name] = version
         return executable
 
@@ -85,19 +95,19 @@ class Suite:
         repository = REPOSITORIES[key]
         mirror = self.cache / "repositories" / key / f"{repository['commit']}.git"
         mirror.parent.mkdir(parents=True, exist_ok=True)
-        commit = probe([git, "--git-dir", str(mirror), "rev-parse", "refs/heads/devmark"], env=NO_DOWNLOAD)
+        commit = probe([git, "--git-dir", str(mirror), "rev-parse", "refs/heads/devmark"], env=self.env)
         if commit != repository["commit"]:
             self.update(f"Download {key} source snapshot · not timed")
-            self.runner.run([git, "init", "--bare", str(mirror)], ROOT)
-            self.runner.run([git, "--git-dir", str(mirror), "fetch", "--depth", "1", "--no-tags", repository["url"], repository["commit"]], ROOT)
-            self.runner.run([git, "--git-dir", str(mirror), "update-ref", "refs/heads/devmark", repository["commit"]], ROOT)
-            self.runner.run([git, "--git-dir", str(mirror), "symbolic-ref", "HEAD", "refs/heads/devmark"], ROOT)
+            self.run([git, "init", "--bare", str(mirror)], ROOT)
+            self.run([git, "--git-dir", str(mirror), "fetch", "--depth", "1", "--no-tags", repository["url"], repository["commit"]], ROOT)
+            self.run([git, "--git-dir", str(mirror), "update-ref", "refs/heads/devmark", repository["commit"]], ROOT)
+            self.run([git, "--git-dir", str(mirror), "symbolic-ref", "HEAD", "refs/heads/devmark"], ROOT)
         return mirror
 
     def clone_command(self, key: str, destination: Path) -> list[str]:
         mirror = self.seed(key)
         return [
-            shutil.which("git"), "-c", "core.longpaths=true", "-c", "gc.auto=0",
+            self.require("git"), "-c", "core.longpaths=true", "-c", "gc.auto=0",
             "clone", "--no-local", "--depth", "1", "--no-tags", "--branch", "devmark",
             mirror.as_uri(), str(destination),
         ]
@@ -106,7 +116,7 @@ class Suite:
         if key not in self.sources:
             destination = self.run_dir / "sources" / key
             destination.parent.mkdir(parents=True, exist_ok=True)
-            self.runner.run(self.clone_command(key, destination), ROOT, NO_DOWNLOAD)
+            self.run(self.clone_command(key, destination), ROOT)
             self.sources[key] = destination
         return self.sources[key]
 
@@ -128,7 +138,7 @@ class Suite:
             cached_lock = self.cache / "locks" / f"web-{REPOSITORIES['web']['commit']}.yaml"
             if not lock.exists() and cached_lock.exists():
                 shutil.copyfile(cached_lock, lock)
-            self.runner.run([
+            self.run([
                 pnpm, "install", "--frozen-lockfile" if lock.exists() else "--no-frozen-lockfile", "--store-dir", str(store),
                 "--side-effects-cache=false",
             ], source, NO_DOWNLOAD | {"CI": "true"})
@@ -143,7 +153,7 @@ class Suite:
             key = TESTS[test][1]
             destination = self.run_dir / f"{test}-checkout"
             command = self.clone_command(key, destination)
-            return Workload(command, ROOT, NO_DOWNLOAD, lambda: remove_owned(destination, self.run_dir), {
+            return Workload(command, ROOT, self.env, lambda: remove_owned(destination, self.run_dir), {
                 "clone_transport": "file://, no hardlinks or alternates", "history_depth": 1,
             })
         if test == "pnpm-install":
@@ -151,7 +161,7 @@ class Suite:
             return Workload([
                 pnpm, "install", "--offline", "--frozen-lockfile", "--store-dir", str(store),
                 "--side-effects-cache=false",
-            ], source, NO_DOWNLOAD | {"CI": "true", "npm_config_offline": "true"},
+            ], source, self.env | {"CI": "true", "npm_config_offline": "true"},
                 lambda: remove_owned(source / "node_modules", self.run_dir),
                 {"dependency_cache": "warm local pnpm store", "node_modules": "removed before each run"})
         if test == "vite-build":
@@ -164,7 +174,7 @@ class Suite:
                 for relative in ("dist", ".output", ".nitro", ".tanstack", "node_modules/.vite", "node_modules/.cache"):
                     remove_owned(source / relative, self.run_dir)
             return Workload([pnpm, "exec", "vite", "build"], source,
-                NO_DOWNLOAD | {"CI": "true", "npm_config_offline": "true"}, reset,
+                self.env | {"CI": "true", "npm_config_offline": "true"}, reset,
                 {"profile": "production", "dependency_cache": "installed node_modules", "output_cache": "removed before each run"})
         if test == "cargo-build":
             return self.rust()
@@ -175,7 +185,7 @@ class Suite:
     def rust(self) -> Workload:
         cargo = self.require("cargo")
         source = self.source("rust")
-        env = NO_DOWNLOAD | {
+        env = self.env | {
             "CARGO_TARGET_DIR": str(self.run_dir / "cargo-target"),
             "CARGO_INCREMENTAL": "0", "RUSTC_WRAPPER": "", "RUSTC_WORKSPACE_WRAPPER": "",
             "CCACHE_DISABLE": "1", "SCCACHE_DISABLE": "1",
@@ -187,10 +197,10 @@ class Suite:
         if cached_lock.exists():
             shutil.copyfile(cached_lock, lock)
         elif not lock.exists():
-            self.runner.run([cargo, "generate-lockfile"], source, env)
+            self.run([cargo, "generate-lockfile"], source, env)
             cached_lock.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(lock, cached_lock)
-        self.runner.run([cargo, "fetch", "--locked"], source, env)
+        self.run([cargo, "fetch", "--locked"], source, env)
         command = [cargo, "build", "--example", "breakout", "--locked", "--offline"]
         return Workload(command, source, env | {"CARGO_NET_OFFLINE": "true"},
             lambda: remove_owned(self.run_dir / "cargo-target", self.run_dir), {
@@ -202,19 +212,19 @@ class Suite:
     def go(self) -> Workload:
         go = self.require("go", ["version"])
         source = self.source("go")
-        host = probe([go, "env", "GOHOSTOS", "GOHOSTARCH"], cwd=ROOT, env=NO_DOWNLOAD)
+        host = probe([go, "env", "GOHOSTOS", "GOHOSTARCH"], cwd=ROOT, env=self.env)
         if not host or len(host.splitlines()) != 2:
-            raise Skipped("Cannot determine the installed Go toolchain's native target.")
+            raise ToolchainError("Cannot determine the portable Go toolchain's native target.")
         goos, goarch = host.splitlines()
         target = self.run_dir / "go-cache"
         binary = self.run_dir / ("podman-remote.exe" if goos == "windows" else "podman-remote")
-        env = NO_DOWNLOAD | {
+        env = self.env | {
             "GOOS": goos, "GOARCH": goarch, "CGO_ENABLED": "0", "GOFLAGS": "",
-            "GOENV": "off", "GOWORK": "off", "GOCACHE": str(target), "GOTOOLCHAIN": "auto",
+            "GOENV": "off", "GOWORK": "off", "GOCACHE": str(target), "GOTOOLCHAIN": "local",
         }
         self.update("Download Podman dependencies · not timed")
         # Modules are fetched even though upstream currently also ships vendor/.
-        self.runner.run([go, "mod", "download"], source, env)
+        self.run([go, "mod", "download"], source, env)
         def reset() -> None:
             remove_owned(target, self.run_dir)
             remove_owned(binary, self.run_dir)

@@ -49,7 +49,7 @@ class ProcessTests(unittest.TestCase):
                     f"subprocess.Popen([sys.executable, '-c', {grandchild!r}]); time.sleep(60)"
                 )
                 controller = f"""
-import signal, sys, threading, time
+import os, signal, sys, threading, time
 from pathlib import Path
 from devmark.process import Runner, probe
 root = Path({str(root)!r})
@@ -57,7 +57,10 @@ def interrupt():
     deadline = time.monotonic() + 5
     while not (root / 'grandchild.pid').exists() and time.monotonic() < deadline:
         time.sleep(0.02)
-    signal.raise_signal(signal.SIGINT)
+    if os.name == 'nt':
+        signal.raise_signal(signal.SIGINT)
+    else:
+        os.kill(os.getpid(), signal.SIGINT)
 thread = threading.Thread(target=interrupt, daemon=True)
 thread.start()
 try:

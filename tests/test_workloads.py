@@ -7,6 +7,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from devmark.process import Runner
+from devmark.toolchains import ToolchainError
 from devmark.workloads import Skipped, Suite, remove_owned
 
 
@@ -51,12 +52,12 @@ class CleanupTests(unittest.TestCase):
                 remove_owned(owned / ".." / "external", owned)
             self.assertTrue(external.exists())
 
-    def test_missing_tool_is_skipped(self):
+    def test_broken_portable_tool_fails(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             suite = Suite(root / "cache", root / "run", Runner(root / "logs"), lambda text: None)
-            with patch("devmark.workloads.shutil.which", return_value=None):
-                with self.assertRaisesRegex(Skipped, "Missing cargo"):
+            with patch.object(suite.tools, "executable", side_effect=ToolchainError("Missing cargo")):
+                with self.assertRaisesRegex(ToolchainError, "Missing cargo"):
                     suite.require("cargo")
 
 
@@ -78,7 +79,7 @@ class ToolchainTests(unittest.TestCase):
             self.assertEqual(runner.run.call_args.args[0], ["cargo", "fetch", "--locked"])
             self.assertEqual(workload.env["CARGO_NET_OFFLINE"], "true")
 
-    def test_go_resolves_newer_toolchain_before_offline_build(self):
+    def test_go_uses_pinned_toolchain_for_download_and_offline_build(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / "source"
@@ -86,7 +87,7 @@ class ToolchainTests(unittest.TestCase):
             (source / "go.mod").write_text("module fixture\ngo 1.26.3\n")
             runner = Mock()
             suite = Suite(root / "cache", root / "run", runner, lambda text: None)
-            suite.versions["go"] = "go version go1.26.2 windows/amd64"
+            suite.versions["go"] = "go version go1.26.3 windows/amd64"
             with patch.object(suite, "require", return_value="installed-go"), \
                     patch.object(suite, "source", return_value=source), \
                     patch("devmark.workloads.probe", return_value="windows\namd64"):
@@ -94,9 +95,9 @@ class ToolchainTests(unittest.TestCase):
             runner.run.assert_called_once()
             download = runner.run.call_args
             self.assertEqual(download.args[0], ["installed-go", "mod", "download"])
-            self.assertEqual(download.args[2]["GOTOOLCHAIN"], "auto")
+            self.assertEqual(download.args[2]["GOTOOLCHAIN"], "local")
             self.assertEqual(workload.command[0], "installed-go")
-            self.assertEqual(workload.env["GOTOOLCHAIN"], "auto")
+            self.assertEqual(workload.env["GOTOOLCHAIN"], "local")
             self.assertEqual(workload.env["GOPROXY"], "off")
 
 
@@ -118,7 +119,8 @@ class LocalCloneTests(unittest.TestCase):
             owned = root / "run"
             owned.mkdir()
             suite = Suite(root / "cache", owned, Runner(owned / "logs", timeout=10), lambda text: None)
-            with patch.dict("devmark.workloads.REPOSITORIES", {"web": {"url": upstream.as_uri(), "commit": commit}}):
+            with patch.dict("devmark.workloads.REPOSITORIES", {"web": {"url": upstream.as_uri(), "commit": commit}}), \
+                    patch.object(suite.tools, "executable", side_effect=shutil.which):
                 workload = suite.prepare("git-clone-web")
                 workload.reset()
                 suite.runner.run(workload.command, workload.cwd, workload.env)
@@ -154,6 +156,7 @@ class PnpmLockTests(unittest.TestCase):
                     "dependencies": {"esbuild": "file:../../dependency"},
                 }))
                 suite = Suite(cache, run, Runner(run / "logs", timeout=30), lambda text: None)
+                suite.tools.executable = Mock(side_effect=shutil.which)
                 suite.require("pnpm")
                 # A local tarball must be approved by its artifact path, not by
                 # the registry package name used in the production dashboard.

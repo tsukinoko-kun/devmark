@@ -153,7 +153,7 @@ def main() -> int:
     output_dir = ROOT / "measurments"
     output_dir.mkdir(exist_ok=True)
     path = output_dir / f"{identity}.json"
-    records = [{
+    records: list[dict] = [{
         "id": key, "name": name,
         "status": Status.PENDING, "samples_ms": [], "statistics": None,
     } for key, (name, _) in TESTS.items() if args.only is None or key in args.only]
@@ -164,6 +164,8 @@ def main() -> int:
     exit_code = 0
     try:
         with Live(display, console=console, refresh_per_second=4, auto_refresh=console.is_terminal):
+            suite.install({record["id"] for record in records})
+            display.update("Collect hardware information")
             hardware = collect()
             for record in records:
                 current = record
@@ -211,15 +213,14 @@ def main() -> int:
         for record in records:
             if record["status"] == Status.PENDING:
                 record["status"] = Status.NOT_RUN
-        if not args.keep_workspace:
-            try:
-                for child in run_dir.iterdir():
-                    if child.name not in ("logs", "locks"):
-                        remove_owned(child, run_dir)
-            except OSError as error:
-                console.print(Text(f"Cleanup failed: {error}", style="red"))
-                if exit_code == 0:
-                    exit_code = 1
+        try:
+            for child in run_dir.iterdir():
+                if child.name not in ("logs", "locks") and (not args.keep_workspace or child.name == "toolchains"):
+                    remove_owned(child, run_dir)
+        except OSError as error:
+            console.print(Text(f"Cleanup failed: {error}", style="red"))
+            if exit_code == 0:
+                exit_code = 1
     if exit_code == 0:
         try:
             write_json(path, measurement(hardware, records))
