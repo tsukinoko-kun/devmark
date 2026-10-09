@@ -150,7 +150,7 @@ def main() -> int:
     identity = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ") + "-" + uuid.uuid4().hex[:8]
     run_dir = ROOT / ".devmark" / "runs" / identity
     run_dir.mkdir(parents=True)
-    output_dir = ROOT / "measurments"
+    output_dir = ROOT / "measurements"
     output_dir.mkdir(exist_ok=True)
     path = output_dir / f"{identity}.json"
     records: list[dict] = [{

@@ -38,7 +38,7 @@ class RunTests(unittest.TestCase):
                 self.assertEqual(cli.main(), 130)
             prepared.assert_called_once_with("cargo-build")
             generate.assert_not_called()
-            self.assertEqual(list((root / "measurments").glob("*.json*")), [])
+            self.assertEqual(list((root / "measurements").glob("*.json*")), [])
             run_dir = next((root / ".devmark" / "runs").iterdir())
             self.assertFalse((run_dir / "sources").exists())
             self.assertTrue((run_dir / "logs").exists())
@@ -71,8 +71,8 @@ class RunTests(unittest.TestCase):
                     patch.object(cli, "generate", wraps=cli.generate, side_effect=graph_error) as generate,
                 ):
                     self.assertEqual(cli.main(), 1 if graph_error else 0)
-                self.assertEqual(len(list((root / "measurments").glob("*.json"))), 1)
-                generate.assert_called_once_with(root / "measurments", root / "docs" / "overview.svg")
+                self.assertEqual(len(list((root / "measurements").glob("*.json"))), 1)
+                generate.assert_called_once_with(root / "measurements", root / "docs" / "overview.svg")
                 if graph_error:
                     self.assertIn("Measurement saved, but cannot generate overview", output.getvalue())
                 else:
@@ -105,7 +105,7 @@ class RunTests(unittest.TestCase):
             ):
                 self.assertEqual(cli.main(), 1)
             self.assertEqual(prepared, ["git-clone-web", "pnpm-install"])
-            self.assertEqual(list((root / "measurments").glob("*.json*")), [])
+            self.assertEqual(list((root / "measurements").glob("*.json*")), [])
             self.assertIn("Exit 7", output.getvalue())
             generate.assert_not_called()
 

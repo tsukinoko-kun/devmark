@@ -182,7 +182,7 @@ def generate(directory: Path, output: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Generate file system and CPU score summaries from saved Devmark measurements.")
-    parser.add_argument("--measurements", type=Path, default=ROOT / "measurments")
+    parser.add_argument("--measurements", type=Path, default=ROOT / "measurements")
     parser.add_argument("--output", type=Path, default=ROOT / "docs" / "overview.svg")
     args = parser.parse_args()
     try:
